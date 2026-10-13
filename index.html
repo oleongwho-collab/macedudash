@@ -6,43 +6,47 @@
 <title>澳門教育資源決策儀錶板</title>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
 * { box-sizing: border-box; }
-body { margin:0; background:#f3f6fa; color:#1f2937;
-  font-family: Arial, "Microsoft JhengHei", sans-serif; }
+body { margin:0; padding:0; background:#f3f6fa; color:#1f2937;
+  font-family: Arial, "Microsoft JhengHei", "Noto Sans TC", sans-serif; }
 .container { width:94%; max-width:1500px; margin:0 auto; padding-bottom:30px; }
 .header { margin-top:24px; padding:30px; color:#fff;
-  background:linear-gradient(135deg,#123b63,#1769aa); border-radius:14px; }
+  background:linear-gradient(135deg,#123b63,#1769aa); border-radius:14px;
+  box-shadow:0 3px 10px rgba(0,0,0,.12); }
 .header h1 { margin:0 0 10px; font-size:30px; }
-.header p { margin:0; color:#dceeff; }
+.header p { margin:0; color:#dceeff; font-size:16px; }
 .notice { margin:18px 0; padding:16px 20px; background:#fff7d6;
   border-left:5px solid #e0a800; border-radius:8px; line-height:1.7; }
 .panel { margin:18px 0; padding:22px; background:#fff;
   border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
 .panel h2 { margin:0 0 20px; color:#123b63; font-size:21px; }
-.panel .sub-note { color:#64748b; font-size:14px; margin:-14px 0 16px 0; }
+.panel .map-note { color:#64748b; font-size:14px; margin-top:0; }
 .input-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
 .input-item label { display:block; min-height:42px; color:#334155;
   font-size:14px; font-weight:bold; line-height:1.5; }
 .input-item input { width:100%; padding:11px; border:1px solid #cbd5e1;
   border-radius:6px; font-size:15px; }
+.input-item input:focus { outline:none; border-color:#1769aa;
+  box-shadow:0 0 0 2px rgba(23,105,170,.15); }
 button { margin-top:22px; padding:12px 26px; border:none; border-radius:7px;
   background:#1769aa; color:#fff; font-size:16px; cursor:pointer; }
 button:hover { background:#0f4d7d; }
 .kpi-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:15px; }
 .kpi-card { min-height:135px; padding:18px; background:#fff; border-radius:11px;
   border-top:4px solid #1769aa; box-shadow:0 2px 8px rgba(0,0,0,.08); }
-.kpi-title { color:#64748b; font-size:14px; }
+.kpi-title { color:#64748b; font-size:14px; line-height:1.5; }
 .kpi-value { margin-top:8px; color:#123b63; font-size:24px; font-weight:bold; }
 .kpi-note { margin-top:8px; color:#94a3b8; font-size:12px; }
 .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
 .chart { width:100%; min-height:380px; }
-#macauMap { width:100%; height:520px; border-radius:10px; z-index:1; }
+#macauMap { width:100%; height:520px; border-radius:10px; margin-top:16px; }
 .map-legend { background:#fff; padding:10px 14px; border-radius:8px;
-  box-shadow:0 1px 4px rgba(0,0,0,.15); font-size:13px; line-height:1.9;
+  box-shadow:0 2px 8px rgba(0,0,0,.2); font-size:13px; line-height:1.9;
   margin-top:14px; }
 .map-legend .dot { display:inline-block; width:12px; height:12px;
   border-radius:50%; margin-right:6px; vertical-align:middle; }
@@ -51,13 +55,18 @@ button:hover { background:#0f4d7d; }
   font-size:17px; font-weight:bold; line-height:1.6; }
 .data-table { width:100%; border-collapse:collapse; }
 .data-table th, .data-table td { padding:13px; border-bottom:1px solid #e2e8f0;
-  text-align:left; }
+  text-align:left; line-height:1.5; }
 .data-table th { background:#eaf1f8; color:#123b63; }
 footer { padding:24px 0 10px; color:#64748b; text-align:center; font-size:13px; }
-@media (max-width:1100px){ .input-grid{grid-template-columns:repeat(2,1fr);}
-  .kpi-grid{grid-template-columns:repeat(3,1fr);} }
-@media (max-width:700px){ .input-grid,.kpi-grid,.chart-grid{grid-template-columns:1fr;}
-  .header h1{font-size:23px;} }
+@media (max-width:1100px){
+  .input-grid{grid-template-columns:repeat(2,1fr);}
+  .kpi-grid{grid-template-columns:repeat(3,1fr);}
+}
+@media (max-width:700px){
+  .input-grid,.kpi-grid,.chart-grid{grid-template-columns:1fr;}
+  .header h1{font-size:23px;}
+  .data-table{display:block; overflow-x:auto; white-space:nowrap;}
+}
 </style>
 </head>
 
@@ -66,54 +75,87 @@ footer { padding:24px 0 10px; color:#64748b; text-align:center; font-size:13px; 
 
 <header class="header">
 <h1>澳門少子化下教育資源決策儀錶板</h1>
-<p>非高等教育學生數據分析、人口傳導預測、分區學校分布及減班優化概念展示</p>
+<p>非高等教育學生數據分析、人口傳導預測及減班優化概念展示</p>
 </header>
 
 <section class="notice">
 <strong>資料說明：</strong>學生數據來自2021/2022至2024/2025學年非高等教育統計資料；
-預測、班級估算及學校地圖資料為模型推算或模擬數據，僅作概念展示，
-不代表官方預測或政策門檻。
+預測及班級估算為模型推算，僅作概念展示，不代表官方預測或政策門檻。
 </section>
 
 <section class="kpi-grid">
-<div class="kpi-card"><div class="kpi-title">最新學年總學生</div>
-<div id="kpiTotal" class="kpi-value">-</div><div class="kpi-note">2024/2025學年</div></div>
-<div class="kpi-card"><div class="kpi-title">幼兒教育學生</div>
-<div id="kpiYoung" class="kpi-value">-</div><div class="kpi-note" id="kpiYoungChange">-</div></div>
-<div class="kpi-card"><div class="kpi-title">幼一入學人數</div>
-<div id="kpiP1" class="kpi-value">-</div><div class="kpi-note" id="kpiP1Change">-</div></div>
-<div class="kpi-card"><div class="kpi-title">小學及以上變化</div>
-<div id="kpiOlder" class="kpi-value">-</div><div class="kpi-note">尚未受少子化明顯影響</div></div>
-<div class="kpi-card"><div class="kpi-title">幼兒估算班數</div>
-<div id="kpiClasses" class="kpi-value">-</div><div class="kpi-note">按實際平均班額26.5人</div></div>
-<div class="kpi-card"><div class="kpi-title">預測班級變化</div>
-<div id="kpiClassChange" class="kpi-value">-</div><div class="kpi-note">模型推算</div></div>
+<div class="kpi-card">
+<div class="kpi-title">最新學年總學生</div>
+<div id="kpiTotal" class="kpi-value">-</div>
+<div class="kpi-note">2024/2025學年</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-title">幼兒教育學生</div>
+<div id="kpiYoung" class="kpi-value">-</div>
+<div class="kpi-note" id="kpiYoungChange">-</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-title">幼一入學人數</div>
+<div id="kpiP1" class="kpi-value">-</div>
+<div class="kpi-note" id="kpiP1Change">-</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-title">小學及以上變化</div>
+<div id="kpiOlder" class="kpi-value">-</div>
+<div class="kpi-note">尚未受少子化明顯影響</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-title">幼兒估算班數</div>
+<div id="kpiClasses" class="kpi-value">-</div>
+<div class="kpi-note">按實際平均班額26.5人</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-title">預測班級變化</div>
+<div id="kpiClassChange" class="kpi-value">-</div>
+<div class="kpi-note">模型推算</div>
+</div>
 </section>
 
 <section class="panel">
 <h2>一、情景參數設定</h2>
 <div class="input-grid">
-<div class="input-item"><label for="p1Rate">幼一入學年變化率（%）</label>
-<input id="p1Rate" type="number" value="-13" step="0.5"></div>
-<div class="input-item"><label for="externalRate">外來／跨境學生年增長率（%）</label>
-<input id="externalRate" type="number" value="1" step="0.5"></div>
-<div class="input-item"><label for="classSize">目標每班學生人數（幼兒）</label>
-<input id="classSize" type="number" value="26" min="15" max="40"></div>
-<div class="input-item"><label for="forecastYears">預測年數</label>
-<input id="forecastYears" type="number" value="5" min="1" max="8"></div>
+<div class="input-item">
+<label for="p1Rate">幼一入學年變化率（%）</label>
+<input id="p1Rate" type="number" value="-13" step="0.5">
+</div>
+<div class="input-item">
+<label for="externalRate">外來／跨境學生年增長率（%）</label>
+<input id="externalRate" type="number" value="1" step="0.5">
+</div>
+<div class="input-item">
+<label for="classSize">目標每班學生人數（幼兒）</label>
+<input id="classSize" type="number" value="26" min="15" max="40">
+</div>
+<div class="input-item">
+<label for="forecastYears">預測年數</label>
+<input id="forecastYears" type="number" value="5" min="1" max="8">
+</div>
 </div>
 <button id="calculateButton">重新計算</button>
 </section>
 
 <section class="chart-grid">
-<div class="panel"><h2>二、總學生人數趨勢（公立及私立）</h2>
-<div id="totalChart" class="chart"></div></div>
-<div class="panel"><h2>三、各教育階段學生人數</h2>
-<div id="stageChart" class="chart"></div></div>
-<div class="panel"><h2>四、幼一入學人數（少子化先行指標）</h2>
-<div id="p1Chart" class="chart"></div></div>
-<div class="panel"><h2>五、各教育階段四年變化率</h2>
-<div id="changeChart" class="chart"></div></div>
+<div class="panel">
+<h2>二、總學生人數趨勢（公立及私立）</h2>
+<div id="totalChart" class="chart"></div>
+</div>
+<div class="panel">
+<h2>三、各教育階段學生人數</h2>
+<div id="stageChart" class="chart"></div>
+</div>
+<div class="panel">
+<h2>四、幼一入學人數（少子化先行指標）</h2>
+<div id="p1Chart" class="chart"></div>
+</div>
+<div class="panel">
+<h2>五、各教育階段四年變化率</h2>
+<div id="changeChart" class="chart"></div>
+</div>
 </section>
 
 <section class="panel">
@@ -123,7 +165,10 @@ footer { padding:24px 0 10px; color:#64748b; text-align:center; font-size:13px; 
 
 <section class="panel">
 <h2>七、模擬學校分區分布地圖</h2>
-<p class="sub-note">以下學校位置及資料為模擬數據，僅作概念展示。日後可替換為真實學校座標及分區數據，並加入分區填色分析。</p>
+<p class="map-note">
+以下學校位置及資料為模擬數據，僅作概念展示。
+日後可替換為真實學校座標及分區數據，並加入分區填色分析。
+</p>
 <div id="macauMap"></div>
 <div class="map-legend">
 <span class="dot" style="background:#16a34a;"></span>綠色｜正常及優化　
@@ -137,12 +182,15 @@ footer { padding:24px 0 10px; color:#64748b; text-align:center; font-size:13px; 
 <h2>八、減班優化初步判斷</h2>
 <div id="policyResult" class="result-box">正在計算……</div>
 <table class="data-table">
-<thead><tr><th>評估項目</th><th>計算結果</th><th>判斷</th></tr></thead>
+<thead>
+<tr><th>評估項目</th><th>計算結果</th><th>判斷</th></tr>
+</thead>
 <tbody id="assessmentTable"></tbody>
 </table>
 </section>
 
 <footer>澳門教育資源監測及政策情景模擬儀錶板｜概念展示版</footer>
+
 </div>
 
 <script>
@@ -184,4 +232,181 @@ function setT(id,v){var e=document.getElementById(id);if(e)e.innerText=v;}
 function baseLayout(y){return {margin:{t:30,r:25,b:60,l:70},
   xaxis:{title:"學年"},yaxis:{title:y,separatethousands:true},
   paper_bgcolor:"#fff",plot_bgcolor:"#fff",legend:{orientation:"h",y:-0.25}};}
-var CONFIG = {responsive:true,display
+var CONFIG = {responsive:true,displaylogo:false};
+
+// ===== 預測模型（概念模型） =====
+function forecast(){
+  var p1Rate = num("p1Rate",-13)/100;
+  var ext = num("externalRate",1)/100;
+  var cs = num("classSize",26);
+  var yrs = Math.max(1,Math.min(8,num("forecastYears",5)));
+  // 幼一變化傳導至整個幼兒階段（3個年級，係數0.7），外來學生部分抵銷
+  var net = p1Rate*0.7 + ext;
+  var y = latestYoung, fy=[], fv=[], fc=[];
+  for(var i=1;i<=yrs;i++){
+    y = y*(1+net);
+    fy.push("預測"+i); fv.push(y); fc.push(Math.ceil(y/cs));
+  }
+  var futureYoung = fv[fv.length-1];
+  var futureClasses = fc[fc.length-1];
+  return {cs:cs, fy:fy, fv:fv, fc:fc,
+    futureYoung:futureYoung, futureClasses:futureClasses,
+    youngPct:(futureYoung/latestYoung-1)*100,
+    classChange:futureClasses-currentYoungClasses};
+}
+
+// ===== KPI =====
+function updateKPI(r){
+  setT("kpiTotal",fmt(latestTotal));
+  setT("kpiYoung",fmt(latestYoung));
+  setT("kpiYoungChange","四年變化："+youngChange4y.toFixed(1)+"%");
+  setT("kpiP1",fmt(latestP1));
+  setT("kpiP1Change","四年變化："+p1Change4y.toFixed(1)+"%");
+  setT("kpiOlder",(olderChange>=0?"+":"")+olderChange.toFixed(1)+"%");
+  setT("kpiClasses",fmt(currentYoungClasses)+"班");
+  setT("kpiClassChange",(r.classChange>0?"+":"")+r.classChange+"班");
+}
+
+// ===== 圖表 =====
+function updateCharts(r){
+  if(typeof Plotly==="undefined"){
+    setT("policyResult","錯誤：Plotly圖表套件未能載入，請檢查網絡連線。");return;}
+
+  Plotly.newPlot("totalChart",[
+    {x:YEARS,y:TOTAL["公立"],type:"scatter",mode:"lines+markers",name:"公立學校",line:{color:"#d97706",width:3}},
+    {x:YEARS,y:TOTAL["私立"],type:"scatter",mode:"lines+markers",name:"私立學校",line:{color:"#1769aa",width:3}},
+    {x:YEARS,y:TOTAL_ALL,type:"scatter",mode:"lines+markers",name:"合計",line:{color:"#16a34a",width:3,dash:"dot"}}
+  ],baseLayout("學生人數"),CONFIG);
+
+  var colors={"幼兒教育":"#d97706","小學教育":"#1769aa","初中教育":"#16a34a","高中教育":"#7c3aed","特殊教育":"#64748b"};
+  var traces=Object.keys(STAGE_TOTALS).map(function(k){
+    return {x:YEARS,y:STAGE_TOTALS[k],type:"scatter",mode:"lines+markers",name:k,line:{color:colors[k],width:3}};});
+  Plotly.newPlot("stageChart",traces,baseLayout("學生人數"),CONFIG);
+
+  Plotly.newPlot("p1Chart",[
+    {x:YEARS,y:P1,type:"scatter",mode:"lines+markers",name:"幼一入學人數",line:{color:"#dc2626",width:3},marker:{size:9}}
+  ],baseLayout("幼一入學人數"),CONFIG);
+
+  var ks=Object.keys(STAGE_TOTALS);
+  var vs=ks.map(function(k){return (STAGE_TOTALS[k][3]/STAGE_TOTALS[k][0]-1)*100;});
+  var cs2=vs.map(function(v){return v<0?"#dc2626":"#16a34a";});
+  Plotly.newPlot("changeChart",[
+    {x:ks,y:vs,type:"bar",marker:{color:cs2},
+     text:vs.map(function(v){return v.toFixed(1)+"%";}),textposition:"outside"}
+  ],{margin:{t:30,r:25,b:60,l:70},yaxis:{title:"四年變化率（%）",ticksuffix:"%"},
+     paper_bgcolor:"#fff",plot_bgcolor:"#fff"},CONFIG);
+
+  var fx=[YEARS[3]].concat(r.fy);
+  var fy2=[latestYoung].concat(r.fv);
+  var fc2=[currentYoungClasses].concat(r.fc);
+  Plotly.newPlot("forecastChart",[
+    {x:YEARS,y:STAGE_TOTALS["幼兒教育"],type:"scatter",mode:"lines+markers",name:"幼兒學生（實際）",line:{color:"#1769aa",width:3}},
+    {x:fx,y:fy2,type:"scatter",mode:"lines+markers",name:"幼兒學生（預測）",line:{color:"#dc2626",width:3,dash:"dash"}},
+    {x:fx,y:fc2,type:"scatter",mode:"lines+markers",name:"班級需求（預測）",yaxis:"y2",line:{color:"#16a34a",width:3,dash:"dot"}}
+  ],{margin:{t:30,r:70,b:60,l:70},xaxis:{title:"學年"},
+     yaxis:{title:"幼兒學生人數",separatethousands:true},
+     yaxis2:{title:"班級數",overlaying:"y",side:"right",rangemode:"tozero"},
+     paper_bgcolor:"#fff",plot_bgcolor:"#fff",legend:{orientation:"h",y:-0.25}},CONFIG);
+}
+
+// ===== 減班判斷 =====
+function updateAssessment(r){
+  var decline = r.youngPct<=-8;
+  var reduce = r.classChange<=-1;
+  var d;
+  if(decline&&reduce){d="建議進入減班優化評估，並同步檢查跨校合作、校舍使用及教師配置。";}
+  else if(decline){d="幼兒學生預測下降，但未同時出現明顯班級減少，建議先持續監測。";}
+  else if(reduce){d="預測班級需求下降，建議檢查招生率、校舍使用率及教師配置。";}
+  else{d="目前未達到示範性的減班優化條件，建議保留及一般優化。";}
+  setT("policyResult",d);
+  var t=document.getElementById("assessmentTable");
+  if(!t)return;
+  t.innerHTML =
+    "<tr><td>幼兒學生預測變化</td><td>"+r.youngPct.toFixed(1)+"%</td><td>"+
+    (decline?"達到示範性觀察條件":"未達示範性觀察條件")+"</td></tr>"+
+    "<tr><td>目前幼兒估算班數</td><td>"+fmt(currentYoungClasses)+"班</td><td>按實際平均班額26.5人估算</td></tr>"+
+    "<tr><td>預測幼兒班級數</td><td>"+fmt(r.futureClasses)+"班</td><td>"+
+    (reduce?"預計減少班級":"未見班級減少")+"</td></tr>"+
+    "<tr><td>班級變化</td><td>"+r.classChange+"班</td><td>"+
+    (reduce?"需要進一步評估":"暫不觸發減班判斷")+"</td></tr>"+
+    "<tr><td>目標每班人數</td><td>"+r.cs+"人</td><td>使用者輸入參數</td></tr>"+
+    "<tr><td>資料性質</td><td>模型推算</td><td>概念展示，非正式政策門檻</td></tr>";
+}
+
+// ===== 執行 =====
+function runDashboard(){
+  var r=forecast();
+  updateKPI(r);
+  updateCharts(r);
+  updateAssessment(r);
+}
+
+// ===== 模擬學校地圖 =====
+var SIM_SCHOOLS = [
+  {name:"北區模擬A校",district:"澳門半島北區",lat:22.2130,lng:113.5480,students:1150,classes:44,util:0.62,risk:72,level:"red"},
+  {name:"北區模擬B校",district:"澳門半島北區",lat:22.2090,lng:113.5560,students:980,classes:38,util:0.71,risk:55,level:"orange"},
+  {name:"北區模擬C校",district:"澳門半島北區",lat:22.2160,lng:113.5410,students:1320,classes:50,util:0.85,risk:28,level:"green"},
+  {name:"中區模擬D校",district:"澳門半島中區",lat:22.1960,lng:113.5450,students:860,classes:33,util:0.66,risk:58,level:"orange"},
+  {name:"中區模擬E校",district:"澳門半島中區",lat:22.1910,lng:113.5520,students:1450,classes:55,util:0.90,risk:22,level:"green"},
+  {name:"南區模擬F校",district:"澳門半島南區",lat:22.1850,lng:113.5390,students:720,classes:28,util:0.58,risk:66,level:"orange"},
+  {name:"南區模擬G校",district:"澳門半島南區",lat:22.1800,lng:113.5470,students:640,classes:25,util:0.52,risk:78,level:"red"},
+  {name:"氹仔模擬H校",district:"氹仔區",lat:22.1620,lng:113.5560,students:1580,classes:60,util:0.88,risk:25,level:"green"},
+  {name:"氹仔模擬I校",district:"氹仔區",lat:22.1560,lng:113.5630,students:1050,classes:40,util:0.74,risk:42,level:"yellow"},
+  {name:"氹仔模擬J校",district:"氹仔區",lat:22.1580,lng:113.5480,students:890,classes:34,util:0.63,risk:52,level:"orange"},
+  {name:"路環模擬K校",district:"路環區",lat:22.1320,lng:113.5900,students:420,classes:16,util:0.48,risk:74,level:"red"},
+  {name:"路環模擬L校",district:"路環區",lat:22.1250,lng:113.5830,students:560,classes:22,util:0.60,risk:48,level:"yellow"}
+];
+
+var LEVEL_COLOR = {green:"#16a34a",yellow:"#eab308",orange:"#ea580c",red:"#dc2626"};
+var LEVEL_TEXT = {
+  green:"綠色｜正常及優化",
+  yellow:"黃色｜觀察及改善",
+  orange:"橙色｜減班／跨校合作評估",
+  red:"紅色｜合併／轉型評估"
+};
+
+function initMap(){
+  if(typeof L==="undefined"){
+    setT("policyResult","提示：地圖套件Leaflet未能載入，圖表功能不受影響。");
+    return;
+  }
+
+  var map = L.map("macauMap").setView([22.175,113.555],12);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    attribution:"&copy; OpenStreetMap contributors",
+    maxZoom:18
+  }).addTo(map);
+
+  SIM_SCHOOLS.forEach(function(s){
+    var marker = L.circleMarker([s.lat,s.lng],{
+      radius:12,
+      color:"#ffffff",
+      weight:2,
+      fillColor:LEVEL_COLOR[s.level],
+      fillOpacity:0.9
+    }).addTo(map);
+
+    marker.bindPopup(
+      "<strong>"+s.name+"</strong><br>"+
+      "分區："+s.district+"<br>"+
+      "學生人數："+fmt(s.students)+"人<br>"+
+      "現有班數："+s.classes+"班<br>"+
+      "校舍使用率："+(s.util*100).toFixed(0)+"%<br>"+
+      "風險分數："+s.risk+"分<br>"+
+      "<strong>"+LEVEL_TEXT[s.level]+"</strong>"
+    );
+  });
+}
+
+// ===== 統一啟動 =====
+document.addEventListener("DOMContentLoaded",function(){
+  var b=document.getElementById("calculateButton");
+  if(b)b.addEventListener("click",runDashboard);
+  runDashboard();
+  initMap();
+});
+</script>
+
+</body>
+</html>
