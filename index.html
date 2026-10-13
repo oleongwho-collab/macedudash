@@ -1,159 +1,281 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>澳門教育資源決策儀錶板</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
-    <title>澳門教育資源決策儀錶板</title>
-
-    <link rel="stylesheet" href="style.css">
-
-    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+* { box-sizing: border-box; }
+body { margin:0; background:#f3f6fa; color:#1f2937;
+  font-family: Arial, "Microsoft JhengHei", sans-serif; }
+.container { width:94%; max-width:1500px; margin:0 auto; padding-bottom:30px; }
+.header { margin-top:24px; padding:30px; color:#fff;
+  background:linear-gradient(135deg,#123b63,#1769aa); border-radius:14px; }
+.header h1 { margin:0 0 10px; font-size:30px; }
+.header p { margin:0; color:#dceeff; }
+.notice { margin:18px 0; padding:16px 20px; background:#fff7d6;
+  border-left:5px solid #e0a800; border-radius:8px; line-height:1.7; }
+.panel { margin:18px 0; padding:22px; background:#fff;
+  border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+.panel h2 { margin:0 0 20px; color:#123b63; font-size:21px; }
+.input-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.input-item label { display:block; min-height:42px; color:#334155;
+  font-size:14px; font-weight:bold; line-height:1.5; }
+.input-item input { width:100%; padding:11px; border:1px solid #cbd5e1;
+  border-radius:6px; font-size:15px; }
+button { margin-top:22px; padding:12px 26px; border:none; border-radius:7px;
+  background:#1769aa; color:#fff; font-size:16px; cursor:pointer; }
+button:hover { background:#0f4d7d; }
+.kpi-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:15px; }
+.kpi-card { min-height:135px; padding:18px; background:#fff; border-radius:11px;
+  border-top:4px solid #1769aa; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+.kpi-title { color:#64748b; font-size:14px; }
+.kpi-value { margin-top:8px; color:#123b63; font-size:24px; font-weight:bold; }
+.kpi-note { margin-top:8px; color:#94a3b8; font-size:12px; }
+.chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.chart { width:100%; min-height:380px; }
+.result-box { margin-bottom:18px; padding:16px 20px; background:#e8f4ff;
+  border-left:5px solid #1769aa; border-radius:7px; color:#123b63;
+  font-size:17px; font-weight:bold; line-height:1.6; }
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th, .data-table td { padding:13px; border-bottom:1px solid #e2e8f0;
+  text-align:left; }
+.data-table th { background:#eaf1f8; color:#123b63; }
+footer { padding:24px 0 10px; color:#64748b; text-align:center; font-size:13px; }
+@media (max-width:1100px){ .input-grid{grid-template-columns:repeat(2,1fr);}
+  .kpi-grid{grid-template-columns:repeat(3,1fr);} }
+@media (max-width:700px){ .input-grid,.kpi-grid,.chart-grid{grid-template-columns:1fr;}
+  .header h1{font-size:23px;} }
+</style>
 </head>
 
 <body>
+<div class="container">
 
-    <div class="container">
+<header class="header">
+<h1>澳門少子化下教育資源決策儀錶板</h1>
+<p>非高等教育學生數據分析、人口傳導預測及減班優化概念展示</p>
+</header>
 
-        <header class="header">
-            <h1>澳門少子化下教育資源決策儀錶板</h1>
-            <p>非高等教育學生數據分析、人口傳導預測及減班優化概念展示</p>
-        </header>
+<section class="notice">
+<strong>資料說明：</strong>學生數據來自2021/2022至2024/2025學年非高等教育統計資料；
+預測及班級估算為模型推算，僅作概念展示，不代表官方預測或政策門檻。
+</section>
 
-        <section class="notice">
-            <strong>資料說明：</strong>
-            學生數據來自2021/2022至2024/2025學年官方統計資料；
-            預測及班級估算為模型推算，僅作概念展示，不代表官方預測或政策門檻。
-        </section>
+<section class="kpi-grid">
+<div class="kpi-card"><div class="kpi-title">最新學年總學生</div>
+<div id="kpiTotal" class="kpi-value">-</div><div class="kpi-note">2024/2025學年</div></div>
+<div class="kpi-card"><div class="kpi-title">幼兒教育學生</div>
+<div id="kpiYoung" class="kpi-value">-</div><div class="kpi-note" id="kpiYoungChange">-</div></div>
+<div class="kpi-card"><div class="kpi-title">幼一入學人數</div>
+<div id="kpiP1" class="kpi-value">-</div><div class="kpi-note" id="kpiP1Change">-</div></div>
+<div class="kpi-card"><div class="kpi-title">小學及以上變化</div>
+<div id="kpiOlder" class="kpi-value">-</div><div class="kpi-note">尚未受少子化明顯影響</div></div>
+<div class="kpi-card"><div class="kpi-title">幼兒估算班數</div>
+<div id="kpiClasses" class="kpi-value">-</div><div class="kpi-note">按實際平均班額26.5人</div></div>
+<div class="kpi-card"><div class="kpi-title">預測班級變化</div>
+<div id="kpiClassChange" class="kpi-value">-</div><div class="kpi-note">模型推算</div></div>
+</section>
 
-        <!-- KPI -->
-        <section class="kpi-grid">
+<section class="panel">
+<h2>一、情景參數設定</h2>
+<div class="input-grid">
+<div class="input-item"><label for="p1Rate">幼一入學年變化率（%）</label>
+<input id="p1Rate" type="number" value="-13" step="0.5"></div>
+<div class="input-item"><label for="externalRate">外來／跨境學生年增長率（%）</label>
+<input id="externalRate" type="number" value="1" step="0.5"></div>
+<div class="input-item"><label for="classSize">目標每班學生人數（幼兒）</label>
+<input id="classSize" type="number" value="26" min="15" max="40"></div>
+<div class="input-item"><label for="forecastYears">預測年數</label>
+<input id="forecastYears" type="number" value="5" min="1" max="8"></div>
+</div>
+<button id="calculateButton">重新計算</button>
+</section>
 
-            <div class="kpi-card">
-                <div class="kpi-title">最新學年總學生</div>
-                <div id="kpiTotal" class="kpi-value">-</div>
-                <div class="kpi-note">2024/2025學年</div>
-            </div>
+<section class="chart-grid">
+<div class="panel"><h2>二、總學生人數趨勢（公立及私立）</h2>
+<div id="totalChart" class="chart"></div></div>
+<div class="panel"><h2>三、各教育階段學生人數</h2>
+<div id="stageChart" class="chart"></div></div>
+<div class="panel"><h2>四、幼一入學人數（少子化先行指標）</h2>
+<div id="p1Chart" class="chart"></div></div>
+<div class="panel"><h2>五、各教育階段四年變化率</h2>
+<div id="changeChart" class="chart"></div></div>
+</section>
 
-            <div class="kpi-card">
-                <div class="kpi-title">幼兒教育學生</div>
-                <div id="kpiYoung" class="kpi-value">-</div>
-                <div class="kpi-note" id="kpiYoungChange">-</div>
-            </div>
+<section class="panel">
+<h2>六、幼兒教育學生及班級需求預測</h2>
+<div id="forecastChart" class="chart"></div>
+</section>
 
-            <div class="kpi-card">
-                <div class="kpi-title">幼一入學人數</div>
-                <div id="kpiP1" class="kpi-value">-</div>
-                <div class="kpi-note" id="kpiP1Change">-</div>
-            </div>
+<section class="panel">
+<h2>七、減班優化初步判斷</h2>
+<div id="policyResult" class="result-box">正在計算……</div>
+<table class="data-table">
+<thead><tr><th>評估項目</th><th>計算結果</th><th>判斷</th></tr></thead>
+<tbody id="assessmentTable"></tbody>
+</table>
+</section>
 
-            <div class="kpi-card">
-                <div class="kpi-title">小學及以上變化</div>
-                <div id="kpiOlder" class="kpi-value">-</div>
-                <div class="kpi-note">尚未受少子化影響</div>
-            </div>
+<footer>澳門教育資源監測及政策情景模擬儀錶板｜概念展示版</footer>
+</div>
 
-            <div class="kpi-card">
-                <div class="kpi-title">幼兒估算班數</div>
-                <div id="kpiClasses" class="kpi-value">-</div>
-                <div class="kpi-note">按實際平均班額估算</div>
-            </div>
+<script>
+// ===== 官方統計數據 =====
+var YEARS = ["2021/2022","2022/2023","2023/2024","2024/2025"];
+var TOTAL = { "公立":[3458,3441,3591,3714], "私立":[82325,83743,84502,84421] };
+var STAGES = {
+  "幼兒教育":{g:[686,613,591,528],s:[17423,16495,15597,14524]},
+  "小學教育":{g:[1240,1288,1392,1391],s:[35612,36604,36983,37415]},
+  "初中教育":{g:[552,528,560,712],s:[15498,15909,16513,17928]},
+  "高中教育":{g:[554,561,566,581],s:[13308,14238,14918,15477]},
+  "特殊教育":{g:[426,451,482,502],s:[484,497,491,468]}
+};
+var P1 = [5539,5516,5079,4406];
 
-            <div class="kpi-card">
-                <div class="kpi-title">預測班級變化</div>
-                <div id="kpiClassChange" class="kpi-value">-</div>
-                <div class="kpi-note">模型推算</div>
-            </div>
+// ===== 衍生數據 =====
+function sum(a){var t=0;for(var i=0;i<a.length;i++)t+=a[i];return t;}
+var TOTAL_ALL = YEARS.map(function(_,i){return TOTAL["公立"][i]+TOTAL["私立"][i];});
+var STAGE_TOTALS = {};
+Object.keys(STAGES).forEach(function(k){
+  STAGE_TOTALS[k] = STAGES[k].g.map(function(v,i){return v+STAGES[k].s[i];});
+});
+var latestTotal = TOTAL_ALL[3];
+var latestYoung = STAGE_TOTALS["幼兒教育"][3];
+var latestP1 = P1[3];
+var youngChange4y = (latestYoung/STAGE_TOTALS["幼兒教育"][0]-1)*100;
+var p1Change4y = (latestP1/P1[0]-1)*100;
+var olderStages = ["小學教育","初中教育","高中教育","特殊教育"];
+var olderNow = sum(olderStages.map(function(s){return STAGE_TOTALS[s][3];}));
+var olderBefore = sum(olderStages.map(function(s){return STAGE_TOTALS[s][0];}));
+var olderChange = (olderNow/olderBefore-1)*100;
+var currentYoungClasses = Math.ceil(latestYoung/26.5);
 
-        </section>
+// ===== 工具 =====
+function fmt(v){return Math.round(v).toLocaleString("zh-Hant");}
+function num(id,d){var e=document.getElementById(id);
+  if(!e)return d;var v=Number(e.value);return isNaN(v)?d:v;}
+function setT(id,v){var e=document.getElementById(id);if(e)e.innerText=v;}
+function baseLayout(y){return {margin:{t:30,r:25,b:60,l:70},
+  xaxis:{title:"學年"},yaxis:{title:y,separatethousands:true},
+  paper_bgcolor:"#fff",plot_bgcolor:"#fff",legend:{orientation:"h",y:-0.25}};}
+var CONFIG = {responsive:true,displaylogo:false};
 
-        <!-- 參數設定 -->
-        <section class="panel">
-            <h2>一、情景參數設定</h2>
+// ===== 預測模型（概念模型） =====
+function forecast(){
+  var p1Rate = num("p1Rate",-13)/100;
+  var ext = num("externalRate",1)/100;
+  var cs = num("classSize",26);
+  var yrs = Math.max(1,Math.min(8,num("forecastYears",5)));
+  // 幼一變化傳導至整個幼兒階段（3個年級，係數0.7），外來學生部分抵銷
+  var net = p1Rate*0.7 + ext;
+  var y = latestYoung, fy=[], fv=[], fc=[];
+  for(var i=1;i<=yrs;i++){
+    y = y*(1+net);
+    fy.push("預測"+i); fv.push(y); fc.push(Math.ceil(y/cs));
+  }
+  var futureYoung = fv[fv.length-1];
+  var futureClasses = fc[fc.length-1];
+  return {cs:cs, fy:fy, fv:fv, fc:fc,
+    futureYoung:futureYoung, futureClasses:futureClasses,
+    youngPct:(futureYoung/latestYoung-1)*100,
+    classChange:futureClasses-currentYoungClasses};
+}
 
-            <div class="input-grid">
+// ===== KPI =====
+function updateKPI(r){
+  setT("kpiTotal",fmt(latestTotal));
+  setT("kpiYoung",fmt(latestYoung));
+  setT("kpiYoungChange","四年變化："+youngChange4y.toFixed(1)+"%");
+  setT("kpiP1",fmt(latestP1));
+  setT("kpiP1Change","四年變化："+p1Change4y.toFixed(1)+"%");
+  setT("kpiOlder",(olderChange>=0?"+":"")+olderChange.toFixed(1)+"%");
+  setT("kpiClasses",fmt(currentYoungClasses)+"班");
+  setT("kpiClassChange",(r.classChange>0?"+":"")+r.classChange+"班");
+}
 
-                <div class="input-item">
-                    <label for="p1Rate">幼一入學年變化率（%）</label>
-                    <input id="p1Rate" type="number" value="-13" step="0.5">
-                </div>
+// ===== 圖表 =====
+function updateCharts(r){
+  if(typeof Plotly==="undefined"){
+    setT("policyResult","錯誤：Plotly圖表套件未能載入，請檢查網絡連線。");return;}
 
-                <div class="input-item">
-                    <label for="externalRate">外來／跨境學生年增長率（%）</label>
-                    <input id="externalRate" type="number" value="1" step="0.5">
-                </div>
+  Plotly.newPlot("totalChart",[
+    {x:YEARS,y:TOTAL["公立"],type:"scatter",mode:"lines+markers",name:"公立學校",line:{color:"#d97706",width:3}},
+    {x:YEARS,y:TOTAL["私立"],type:"scatter",mode:"lines+markers",name:"私立學校",line:{color:"#1769aa",width:3}},
+    {x:YEARS,y:TOTAL_ALL,type:"scatter",mode:"lines+markers",name:"合計",line:{color:"#16a34a",width:3,dash:"dot"}}
+  ],baseLayout("學生人數"),CONFIG);
 
-                <div class="input-item">
-                    <label for="classSize">目標每班學生人數（幼兒）</label>
-                    <input id="classSize" type="number" value="26" min="15" max="40">
-                </div>
+  var colors={"幼兒教育":"#d97706","小學教育":"#1769aa","初中教育":"#16a34a","高中教育":"#7c3aed","特殊教育":"#64748b"};
+  var traces=Object.keys(STAGE_TOTALS).map(function(k){
+    return {x:YEARS,y:STAGE_TOTALS[k],type:"scatter",mode:"lines+markers",name:k,line:{color:colors[k],width:3}};});
+  Plotly.newPlot("stageChart",traces,baseLayout("學生人數"),CONFIG);
 
-                <div class="input-item">
-                    <label for="forecastYears">預測年數</label>
-                    <input id="forecastYears" type="number" value="5" min="1" max="8">
-                </div>
+  Plotly.newPlot("p1Chart",[
+    {x:YEARS,y:P1,type:"scatter",mode:"lines+markers",name:"幼一入學人數",line:{color:"#dc2626",width:3},marker:{size:9}}
+  ],baseLayout("幼一入學人數"),CONFIG);
 
-            </div>
+  var ks=Object.keys(STAGE_TOTALS);
+  var vs=ks.map(function(k){return (STAGE_TOTALS[k][3]/STAGE_TOTALS[k][0]-1)*100;});
+  var cs2=vs.map(function(v){return v<0?"#dc2626":"#16a34a";});
+  Plotly.newPlot("changeChart",[
+    {x:ks,y:vs,type:"bar",marker:{color:cs2},
+     text:vs.map(function(v){return v.toFixed(1)+"%";}),textposition:"outside"}
+  ],{margin:{t:30,r:25,b:60,l:70},yaxis:{title:"四年變化率（%）",ticksuffix:"%"},
+     paper_bgcolor:"#fff",plot_bgcolor:"#fff"},CONFIG);
 
-            <button id="calculateButton">重新計算</button>
-        </section>
+  var fx=[YEARS[3]].concat(r.fy);
+  var fy2=[latestYoung].concat(r.fv);
+  var fc2=[currentYoungClasses].concat(r.fc);
+  Plotly.newPlot("forecastChart",[
+    {x:YEARS,y:STAGE_TOTALS["幼兒教育"],type:"scatter",mode:"lines+markers",name:"幼兒學生（實際）",line:{color:"#1769aa",width:3}},
+    {x:fx,y:fy2,type:"scatter",mode:"lines+markers",name:"幼兒學生（預測）",line:{color:"#dc2626",width:3,dash:"dash"}},
+    {x:fx,y:fc2,type:"scatter",mode:"lines+markers",name:"班級需求（預測）",yaxis:"y2",line:{color:"#16a34a",width:3,dash:"dot"}}
+  ],{margin:{t:30,r:70,b:60,l:70},xaxis:{title:"學年"},
+     yaxis:{title:"幼兒學生人數",separatethousands:true},
+     yaxis2:{title:"班級數",overlaying:"y",side:"right",rangemode:"tozero"},
+     paper_bgcolor:"#fff",plot_bgcolor:"#fff",legend:{orientation:"h",y:-0.25}},CONFIG);
+}
 
-        <!-- 圖表 -->
-        <section class="chart-grid">
+// ===== 減班判斷 =====
+function updateAssessment(r){
+  var decline = r.youngPct<=-8;
+  var reduce = r.classChange<=-1;
+  var d;
+  if(decline&&reduce){d="建議進入減班優化評估，並同步檢查跨校合作、校舍使用及教師配置。";}
+  else if(decline){d="幼兒學生預測下降，但未同時出現明顯班級減少，建議先持續監測。";}
+  else if(reduce){d="預測班級需求下降，建議檢查招生率、校舍使用率及教師配置。";}
+  else{d="目前未達到示範性的減班優化條件，建議保留及一般優化。";}
+  setT("policyResult",d);
+  var t=document.getElementById("assessmentTable");
+  if(!t)return;
+  t.innerHTML =
+    "<tr><td>幼兒學生預測變化</td><td>"+r.youngPct.toFixed(1)+"%</td><td>"+
+    (decline?"達到示範性觀察條件":"未達示範性觀察條件")+"</td></tr>"+
+    "<tr><td>目前幼兒估算班數</td><td>"+fmt(currentYoungClasses)+"班</td><td>按實際平均班額26.5人估算</td></tr>"+
+    "<tr><td>預測幼兒班級數</td><td>"+fmt(r.futureClasses)+"班</td><td>"+
+    (reduce?"預計減少班級":"未見班級減少")+"</td></tr>"+
+    "<tr><td>班級變化</td><td>"+r.classChange+"班</td><td>"+
+    (reduce?"需要進一步評估":"暫不觸發減班判斷")+"</td></tr>"+
+    "<tr><td>目標每班人數</td><td>"+r.cs+"人</td><td>使用者輸入參數</td></tr>"+
+    "<tr><td>資料性質</td><td>模型推算</td><td>概念展示，非正式政策門檻</td></tr>";
+}
 
-            <div class="panel">
-                <h2>二、總學生人數趨勢（公立及私立）</h2>
-                <div id="totalChart" class="chart"></div>
-            </div>
+// ===== 執行 =====
+function run(){
+  var r=forecast();
+  updateKPI(r);
+  updateCharts(r);
+  updateAssessment(r);
+}
 
-            <div class="panel">
-                <h2>三、各教育階段學生人數</h2>
-                <div id="stageChart" class="chart"></div>
-            </div>
-
-            <div class="panel">
-                <h2>四、幼一入學人數（少子化先行指標）</h2>
-                <div id="p1Chart" class="chart"></div>
-            </div>
-
-            <div class="panel">
-                <h2>五、各教育階段四年變化率</h2>
-                <div id="changeChart" class="chart"></div>
-            </div>
-
-        </section>
-
-        <!-- 預測 -->
-        <section class="panel">
-            <h2>六、幼兒教育學生及班級需求預測</h2>
-            <div id="forecastChart" class="chart"></div>
-        </section>
-
-        <!-- 政策判斷 -->
-        <section class="panel">
-            <h2>七、減班優化初步判斷</h2>
-
-            <div id="policyResult" class="result-box">正在計算……</div>
-
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>評估項目</th>
-                        <th>計算結果</th>
-                        <th>判斷</th>
-                    </tr>
-                </thead>
-                <tbody id="assessmentTable"></tbody>
-            </table>
-        </section>
-
-        <footer>
-            澳門教育資源監測及政策情景模擬儀錶板｜概念展示版
-        </footer>
-
-    </div>
-
-    <script src="app.js"></script>
+document.addEventListener("DOMContentLoaded",function(){
+  var b=document.getElementById("calculateButton");
+  if(b)b.addEventListener("click",run);
+  run();
+});
+</script>
 
 </body>
 </html>
