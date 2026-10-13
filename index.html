@@ -3,139 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>澳門教育資源決策儀錶板</title>
 
     <link rel="stylesheet" href="style.css">
 
+    <!-- Plotly圖表套件，必須放在app.js之前 -->
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 </head>
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-    <header>
-        <h1>澳門少子化下教育資源決策儀錶板</h1>
-        <p>概念展示版｜模型預測及模擬數據</p>
-    </header>
+        <!-- 頁首 -->
+        <header class="header">
+            <h1>澳門少子化下教育資源決策儀錶板</h1>
+            <p>教育資源監測、人口預測及減班優化概念展示版</p>
+        </header>
 
-    <section class="notice">
-        本Dashboard為概念展示版，部分學校、校舍、成本及教師資料為模擬數據，
-        不代表官方統計或正式政策建議。
-    </section>
+        <!-- 資料提示 -->
+        <section class="notice">
+            <strong>資料說明：</strong>
+            本Dashboard為概念展示版。部分學生、學校、校舍及政策資料為模擬或模型推算，
+            不代表官方統計或正式政策建議。
+        </section>
 
-    <section class="panel">
-        <h2>情景參數設定</h2>
+        <!-- 參數設定 -->
+        <section class="panel">
+            <h2>一、情景參數設定</h2>
 
-        <div class="input-grid">
+            <div class="input-grid">
 
-            <label>
-                新生兒年變化率（%）
-                <input id="birthRate" type="number" value="-8" step="0.5">
-            </label>
+                <div class="input-item">
+                    <label for="birthRate">
+                        新生兒年變化率（%）
+                    </label>
 
-            <label>
-                外來／跨境學生年增長率（%）
-                <input id="externalRate" type="number" value="1" step="0.5">
-            </label>
+                    <input
+                        id="birthRate"
+                        type="number"
+                        value="-8"
+                        step="0.5"
+                    >
+                </div>
 
-            <label>
-                學生轉出率（%）
-                <input id="transferRate" type="number" value="1.5" step="0.5">
-            </label>
+                <div class="input-item">
+                    <label for="externalRate">
+                        外來／跨境學生年增長率（%）
+                    </label>
 
-            <label>
-                目標每班學生人數
-                <input id="classSize" type="number" value="28" min="20" max="40">
-            </label>
+                    <input
+                        id="externalRate"
+                        type="number"
+                        value="1"
+                        step="0.5"
+                    >
+                </div>
 
-            <label>
-                預測年數
-                <input id="forecastYears" type="number" value="5" min="1" max="10">
-            </label>
+                <div class="input-item">
+                    <label for="transferRate">
+                        學生轉出率（%）
+                    </label>
 
-        </div>
+                    <input
+                        id="transferRate"
+                        type="number"
+                        value="1.5"
+                        step="0.5"
+                    >
+                </div>
 
-        <button onclick="runDashboard()">重新計算</button>
-    </section>
+                <div class="input-item">
+                    <label for="classSize">
+                        目標每班學生人數
+                    </label>
 
-    <section class="kpi-grid">
+                    <input
+                        id="classSize"
+                        type="number"
+                        value="28"
+                        min="20"
+                        max="40"
+                    >
+                </div>
 
-        <div class="kpi-card">
-            <div class="kpi-title">目前新生兒</div>
-            <div id="latestBirth" class="kpi-value">2,870</div>
-        </div>
+                <div class="input-item">
+                    <label for="forecastYears">
+                        預測年數
+                    </label>
 
-        <div class="kpi-card">
-            <div class="kpi-title">目前學生人數</div>
-            <div id="currentStudents" class="kpi-value">88,135</div>
-        </div>
+                    <input
+                        id="forecastYears"
+                        type="number"
+                        value="5"
+                        min="1"
+                        max="10"
+                    >
+                </div>
 
-        <div class="kpi-card">
-            <div class="kpi-title">預測期末學生人數</div>
-            <div id="futureStudents" class="kpi-value">-</div>
-        </div>
+            </div>
 
-        <div class="kpi-card">
-            <div class="kpi-title">學生變化率</div>
-            <div id="studentChange" class="kpi-value">-</div>
-        </div>
+            <button id="calculateButton">
+                重新計算
+            </button>
+        </section>
 
-        <div class="kpi-card">
-            <div class="kpi-title">目前估算班數</div>
-            <div id="currentClasses" class="kpi-value">-</div>
-        </div>
+        <!-- KPI -->
+        <section class="kpi-grid">
 
-        <div class="kpi-card">
-            <div class="kpi-title">預測班級變化</div>
-            <div id="classChange" class="kpi-value">-</div>
-        </div>
+            <div class="kpi-card">
+                <div class="kpi-title">2025年新生兒</div>
+                <div id="latestBirth" class="kpi-value">-</div>
+                <div class="kpi-note">已提供統計資料</div>
+            </div>
 
-    </section>
+            <div class="kpi-card">
+                <div class="kpi-title">目前學生人數</div>
+                <div id="currentStudents" class="kpi-value">-</div>
+                <div class="kpi-note">概念展示基準值</div>
+            </div>
 
-    <section class="chart-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">預測期末學生人數</div>
+                <div id="futureStudents" class="kpi-value">-</div>
+                <div class="kpi-note">模型推算</div>
+            </div>
 
-        <div class="panel">
-            <h2>學生人數預測</h2>
-            <div id="studentChart"></div>
-        </div>
+            <div class="kpi-card">
+                <div class="kpi-title">學生人數變化率</div>
+                <div id="studentChange" class="kpi-value">-</div>
+                <div class="kpi-note">模型推算</div>
+            </div>
 
-        <div class="panel">
-            <h2>新生兒趨勢</h2>
-            <div id="birthChart"></div>
-        </div>
+            <div class="kpi-card">
+                <div class="kpi-title">目前估算班數</div>
+                <div id="currentClasses" class="kpi-value">-</div>
+                <div class="kpi-note">按目標班額估算</div>
+            </div>
 
-    </section>
+            <div class="kpi-card">
+                <div class="kpi-title">預測班級變化</div>
+                <div id="classChange" class="kpi-value">-</div>
+                <div class="kpi-note">模型推算</div>
+            </div>
 
-    <section class="panel">
+        </section>
 
-        <h2>減班優化判斷</h2>
+        <!-- 圖表 -->
+        <section class="chart-grid">
 
-        <div id="policyResult" class="result-box">
-            請按「重新計算」
-        </div>
+            <div class="panel">
+                <h2>二、學生人數預測</h2>
+                <div id="studentChart" class="chart"></div>
+            </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>評估項目</th>
-                    <th>數值</th>
-                    <th>判斷</th>
-                </tr>
-            </thead>
+            <div class="panel">
+                <h2>三、新生兒歷年趨勢</h2>
+                <div id="birthChart" class="chart"></div>
+            </div>
 
-            <tbody id="assessmentTable"></tbody>
-        </table>
+        </section>
 
-    </section>
+        <!-- 政策判斷 -->
+        <section class="panel">
 
-    <footer>
-        澳門教育資源監測及政策情景模擬儀錶板｜概念展示版
-    </footer>
+            <h2>四、減班優化初步判斷</h2>
 
-</div>
+            <div id="policyResult" class="result-box">
+                正在計算……
+            </div>
 
-<script src="app.js"></script>
+            <table class="data-table">
+
+                <thead>
+                    <tr>
+                        <th>評估項目</th>
+                        <th>計算結果</th>
+                        <th>判斷</th>
+                    </tr>
+                </thead>
+
+                <tbody id="assessmentTable">
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <!-- 教育資源流程 -->
+        <section class="panel">
+
+            <h2>五、政策分析流程</h2>
+
+            <div class="process-grid">
+
+                <div class="process-card">
+                    <span>1</span>
+                    <strong>輸入參數</strong>
+                    <p>調整人口及教育參數</p>
+                </div>
+
+                <div class="process-card">
+                    <span>2</span>
+                    <strong>預測學生</strong>
+                    <p>計算未來學生人數</p>
+                </div>
+
+                <div class="process-card">
+                    <span>3</span>
+                    <strong>計算班級</strong>
+                    <p>估算未來班級需求</p>
+                </div>
+
+                <div class="process-card">
+                    <span>4</span>
+                    <strong>風險判斷</strong>
+                    <p>識別減班優化需要</p>
+                </div>
+
+                <div class="process-card">
+                    <span>5</span>
+                    <strong>政策建議</strong>
+                    <p>支援合作、減班及轉型討論</p>
+                </div>
+
+            </div>
+
+        </section>
+
+        <footer>
+            澳門教育資源監測及政策情景模擬儀錶板｜概念展示版
+        </footer>
+
+    </div>
+
+    <!-- app.js必須放在body結尾 -->
+    <script src="app.js"></script>
 
 </body>
 </html>
