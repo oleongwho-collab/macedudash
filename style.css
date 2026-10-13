@@ -7,11 +7,7 @@ body {
     padding: 0;
     background: #f3f6fa;
     color: #1f2937;
-    font-family:
-        Arial,
-        "Microsoft JhengHei",
-        "Noto Sans TC",
-        sans-serif;
+    font-family: Arial, "Microsoft JhengHei", "Noto Sans TC", sans-serif;
 }
 
 .container {
@@ -21,16 +17,11 @@ body {
     padding-bottom: 30px;
 }
 
-/* 頁首 */
 .header {
     margin-top: 24px;
     padding: 30px;
     color: white;
-    background: linear-gradient(
-        135deg,
-        #123b63,
-        #1769aa
-    );
+    background: linear-gradient(135deg, #123b63, #1769aa);
     border-radius: 14px;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
 }
@@ -38,7 +29,6 @@ body {
 .header h1 {
     margin: 0 0 10px 0;
     font-size: 30px;
-    letter-spacing: 1px;
 }
 
 .header p {
@@ -47,7 +37,6 @@ body {
     font-size: 16px;
 }
 
-/* 資料提示 */
 .notice {
     margin: 18px 0;
     padding: 16px 20px;
@@ -57,7 +46,6 @@ body {
     line-height: 1.7;
 }
 
-/* 一般內容區 */
 .panel {
     margin: 18px 0;
     padding: 22px;
@@ -73,10 +61,9 @@ body {
     font-size: 21px;
 }
 
-/* 輸入框區域 */
 .input-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
 }
 
@@ -99,7 +86,6 @@ body {
     border: 1px solid #cbd5e1;
     border-radius: 6px;
     font-size: 15px;
-    background: #ffffff;
 }
 
 .input-item input:focus {
@@ -108,7 +94,6 @@ body {
     box-shadow: 0 0 0 2px rgba(23, 105, 170, 0.15);
 }
 
-/* 按鈕 */
 button {
     margin-top: 22px;
     padding: 12px 26px;
@@ -124,11 +109,6 @@ button:hover {
     background: #0f4d7d;
 }
 
-button:active {
-    transform: translateY(1px);
-}
-
-/* KPI */
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -136,7 +116,7 @@ button:active {
 }
 
 .kpi-card {
-    min-height: 130px;
+    min-height: 135px;
     padding: 18px;
     background: white;
     border-radius: 11px;
@@ -153,7 +133,7 @@ button:active {
 .kpi-value {
     margin-top: 8px;
     color: #123b63;
-    font-size: 25px;
+    font-size: 24px;
     font-weight: bold;
 }
 
@@ -163,7 +143,6 @@ button:active {
     font-size: 12px;
 }
 
-/* 圖表 */
 .chart-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -175,7 +154,6 @@ button:active {
     min-height: 380px;
 }
 
-/* 政策判斷 */
 .result-box {
     margin-bottom: 18px;
     padding: 16px 20px;
@@ -188,11 +166,9 @@ button:active {
     line-height: 1.6;
 }
 
-/* 表格 */
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    overflow: hidden;
 }
 
 .data-table th,
@@ -206,54 +182,8 @@ button:active {
 .data-table th {
     background: #eaf1f8;
     color: #123b63;
-    font-weight: bold;
 }
 
-.data-table tr:hover {
-    background: #f8fafc;
-}
-
-/* 流程卡片 */
-.process-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 14px;
-}
-
-.process-card {
-    min-height: 150px;
-    padding: 18px;
-    background: #f5f9fd;
-    border: 1px solid #dbeafe;
-    border-radius: 10px;
-    text-align: center;
-}
-
-.process-card span {
-    display: block;
-    width: 34px;
-    height: 34px;
-    margin: 0 auto 10px auto;
-    padding-top: 7px;
-    border-radius: 50%;
-    background: #1769aa;
-    color: white;
-    font-weight: bold;
-}
-
-.process-card strong {
-    display: block;
-    color: #123b63;
-}
-
-.process-card p {
-    margin-bottom: 0;
-    color: #64748b;
-    font-size: 13px;
-    line-height: 1.5;
-}
-
-/* 頁尾 */
 footer {
     padding: 24px 0 10px 0;
     color: #64748b;
@@ -261,40 +191,25 @@ footer {
     font-size: 13px;
 }
 
-/* 平板 */
 @media screen and (max-width: 1100px) {
     .input-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .kpi-grid {
         grid-template-columns: repeat(3, 1fr);
     }
-
-    .process-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
 }
 
-/* 手機 */
 @media screen and (max-width: 700px) {
-    .container {
-        width: 94%;
+    .input-grid,
+    .kpi-grid,
+    .chart-grid {
+        grid-template-columns: 1fr;
     }
 
     .header h1 {
         font-size: 23px;
-    }
-
-    .input-grid,
-    .kpi-grid,
-    .chart-grid,
-    .process-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .panel {
-        padding: 16px;
     }
 
     .data-table {
