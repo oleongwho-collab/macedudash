@@ -1,491 +1,165 @@
 /*
-    澳門教育資源決策儀錶板
-    概念展示版
-
-    注意：
-    目前部分數據為模擬或模型推算，
-    不代表正式統計或官方政策門檻。
+    澳門教育資源決策儀錶板（概念展示版）
+    數據來源：2021/2022至2024/2025學年非高等教育學生統計
+    預測部分為模型推算，非官方預測
 */
 
+// =====================================================
+// 一、官方統計數據（已提供資料）
+// =====================================================
+
+const YEARS = ["2021/2022", "2022/2023", "2023/2024", "2024/2025"];
+
+const TOTAL = {
+    公立: [3458, 3441, 3591, 3714],
+    私立: [82325, 83743, 84502, 84421]
+};
+
+const STAGES = {
+    "幼兒教育": { 公立: [686, 613, 591, 528], 私立: [17423, 16495, 15597, 14524] },
+    "小學教育": { 公立: [1240, 1288, 1392, 1391], 私立: [35612, 36604, 36983, 37415] },
+    "初中教育": { 公立: [552, 528, 560, 712], 私立: [15498, 15909, 16513, 17928] },
+    "高中教育": { 公立: [554, 561, 566, 581], 私立: [13308, 14238, 14918, 15477] },
+    "特殊教育": { 公立: [426, 451, 482, 502], 私立: [484, 497, 491, 468] }
+};
+
+// 幼一入學人數（公立＋私立）
+const P1 = [5539, 5516, 5079, 4406];
+
+// 2024/2025學年平均每班人數（已提供資料）
+const ACTUAL_CLASS_SIZE = {
+    "幼兒教育": 26.5,
+    "小學教育": 29.2,
+    "初中教育": 30.5,
+    "高中教育": 29.3
+};
 
 // =====================================================
-// 一、基礎示範資料
+// 二、衍生數據
 // =====================================================
 
-const currentStudents = 88135;
-const latestBirth = 2870;
-const latestYear = 2025;
+function sum(arr) {
+    return arr.reduce(function (a, b) { return a + b; }, 0);
+}
 
-const historicalBirthYears = [
-    2016,
-    2017,
-    2018,
-    2019,
-    2020,
-    2021,
-    2022,
-    2023,
-    2024,
-    2025
-];
+const TOTAL_ALL = YEARS.map(function (_, i) {
+    return TOTAL.公立[i] + TOTAL.私立[i];
+});
 
-const historicalBirths = [
-    7146,
-    6581,
-    5954,
-    5726,
-    5220,
-    5195,
-    4939,
-    4301,
-    3565,
-    2870
-];
+const STAGE_TOTALS = {};
+Object.keys(STAGES).forEach(function (stage) {
+    STAGE_TOTALS[stage] = STAGES[stage].公立.map(function (v, i) {
+        return v + STAGES[stage].私立[i];
+    });
+});
 
+const latestTotal = TOTAL_ALL[TOTAL_ALL.length - 1];          // 88135
+const latestYoung = STAGE_TOTALS["幼兒教育"][3];               // 15052
+const latestP1 = P1[3];                                        // 4406
+
+const youngChange4y = (latestYoung / STAGE_TOTALS["幼兒教育"][0] - 1) * 100;   // 約-16.9%
+const p1Change4y = (latestP1 / P1[0] - 1) * 100;                              // 約-20.5%
+
+const olderStages = ["小學教育", "初中教育", "高中教育", "特殊教育"];
+const olderNow = sum(olderStages.map(function (s) { return STAGE_TOTALS[s][3]; }));
+const olderBefore = sum(olderStages.map(function (s) { return STAGE_TOTALS[s][0]; }));
+const olderChange = (olderNow / olderBefore - 1) * 100;                       // 約+9.4%
+
+const currentYoungClasses = Math.ceil(latestYoung / ACTUAL_CLASS_SIZE["幼兒教育"]);  // 568班
 
 // =====================================================
-// 二、共用工具
+// 三、工具函數
 // =====================================================
 
 function formatNumber(value) {
     return Math.round(value).toLocaleString("zh-Hant");
 }
 
-
-function readNumber(id, defaultValue = 0) {
-    const element = document.getElementById(id);
-
-    if (!element) {
-        return defaultValue;
-    }
-
-    const value = Number(element.value);
-
-    if (Number.isNaN(value)) {
-        return defaultValue;
-    }
-
-    return value;
+function readNumber(id, defaultValue) {
+    const el = document.getElementById(id);
+    if (!el) return defaultValue;
+    const v = Number(el.value);
+    return Number.isNaN(v) ? defaultValue : v;
 }
-
 
 function setText(id, value) {
-    const element = document.getElementById(id);
-
-    if (element) {
-        element.innerText = value;
-    }
+    const el = document.getElementById(id);
+    if (el) el.innerText = value;
 }
 
-
 // =====================================================
-// 三、計算預測結果
+// 四、預測模型（概念模型）
 // =====================================================
 
 function calculateForecast() {
 
-    const birthRate =
-        readNumber("birthRate", -8) / 100;
-
-    const externalRate =
-        readNumber("externalRate", 1) / 100;
-
-    const transferRate =
-        readNumber("transferRate", 1.5) / 100;
-
-    const classSize =
-        readNumber("classSize", 28);
-
-    const forecastYears =
-        Math.max(
-            1,
-            Math.min(
-                10,
-                readNumber("forecastYears", 5)
-            )
-        );
+    const p1Rate = readNumber("p1Rate", -13) / 100;
+    const externalRate = readNumber("externalRate", 1) / 100;
+    const classSize = readNumber("classSize", 26);
+    const years = Math.max(1, Math.min(8, readNumber("forecastYears", 5)));
 
     /*
-        簡化概念模型：
-
-        1. 新生兒變化不會立即完全反映在整體學生人數；
-        2. 因此使用0.35作為出生人口影響傳導係數；
-        3. 外來學生會抵銷部分下降；
-        4. 學生轉出率會造成額外減少。
-
-        這不是正式人口預測模型。
+        概念模型說明：
+        幼一入學變化會在未來數年逐步傳導至整個幼兒教育階段
+        （幼兒共三個年級，因此使用0.7傳導係數），
+        外來學生增長可部分抵銷下降。
+        此為概念展示模型，不是官方人口預測。
     */
 
-    const birthTransmissionFactor = 0.35;
+    const transmission = 0.7;
+    const netYoungChange = p1Rate * transmission + externalRate / 100;
 
-    const birthEffect =
-        birthRate * birthTransmissionFactor;
+    // 幼兒學生預測
+    let young = latestYoung;
+    const fYears = [];
+    const fYoung = [];
+    const fClasses = [];
 
-    const netStudentChange =
-        birthEffect +
-        externalRate -
-        transferRate;
-
-    let students = currentStudents;
-
-    const forecastYearsArray = [];
-    const forecastStudentsArray = [];
-
-    for (let i = 1; i <= forecastYears; i++) {
-
-        students =
-            students * (1 + netStudentChange);
-
-        forecastYearsArray.push(latestYear + i);
-        forecastStudentsArray.push(students);
+    for (let i = 1; i <= years; i++) {
+        young = young * (1 + netYoungChange);
+        fYears.push("預測" + i);
+        fYoung.push(young);
+        fClasses.push(Math.ceil(young / classSize));
     }
 
-    const futureStudents =
-        forecastStudentsArray[
-            forecastStudentsArray.length - 1
-        ];
-
-    const currentClasses =
-        Math.ceil(currentStudents / classSize);
-
-    const futureClasses =
-        Math.ceil(futureStudents / classSize);
-
-    const classChange =
-        futureClasses - currentClasses;
-
-    const studentChange =
-        ((futureStudents / currentStudents) - 1) * 100;
+    const futureYoung = fYoung[fYoung.length - 1];
+    const futureClasses = fClasses[fClasses.length - 1];
+    const youngChangePct = (futureYoung / latestYoung - 1) * 100;
+    const classChange = futureClasses - currentYoungClasses;
 
     return {
-        birthRate,
-        externalRate,
-        transferRate,
-        classSize,
-        forecastYears,
-        forecastYearsArray,
-        forecastStudentsArray,
-        futureStudents,
-        currentClasses,
-        futureClasses,
-        classChange,
-        studentChange
+        p1Rate, externalRate, classSize, years,
+        fYears, fYoung, fClasses,
+        futureYoung, futureClasses,
+        youngChangePct, classChange
     };
 }
 
-
 // =====================================================
-// 四、更新KPI卡片
+// 五、更新KPI
 // =====================================================
 
 function updateKPI(result) {
 
-    setText(
-        "latestBirth",
-        formatNumber(latestBirth)
-    );
+    setText("kpiTotal", formatNumber(latestTotal));
 
-    setText(
-        "currentStudents",
-        formatNumber(currentStudents)
-    );
+    setText("kpiYoung", formatNumber(latestYoung));
+    setText("kpiYoungChange", "四年變化：" + youngChange4y.toFixed(1) + "%");
 
-    setText(
-        "futureStudents",
-        formatNumber(result.futureStudents)
-    );
+    setText("kpiP1", formatNumber(latestP1));
+    setText("kpiP1Change", "四年變化：" + p1Change4y.toFixed(1) + "%");
 
-    setText(
-        "studentChange",
-        result.studentChange.toFixed(1) + "%"
-    );
+    setText("kpiOlder", (olderChange >= 0 ? "+" : "") + olderChange.toFixed(1) + "%");
 
-    setText(
-        "currentClasses",
-        formatNumber(result.currentClasses)
-    );
+    setText("kpiClasses", formatNumber(currentYoungClasses) + "班");
 
-    const classChangeText =
-        result.classChange > 0
-            ? "+" + result.classChange
-            : String(result.classChange);
-
-    setText(
-        "classChange",
-        classChangeText
-    );
+    const t = result.classChange > 0 ? "+" : "";
+    setText("kpiClassChange", t + result.classChange + "班");
 }
 
-
 // =====================================================
-// 五、更新圖表
-// =====================================================
-
-function updateCharts(result) {
-
-    // 檢查Plotly是否已成功載入
-    if (typeof Plotly === "undefined") {
-
-        setText(
-            "policyResult",
-            "錯誤：圖表套件Plotly未能載入，請檢查網絡連線。"
-        );
-
-        return;
-    }
-
-    // -------------------------------
-    // 學生人數預測圖
-    // -------------------------------
-
-    const studentYears = [
-        latestYear
-    ].concat(result.forecastYearsArray);
-
-    const studentValues = [
-        currentStudents
-    ].concat(result.forecastStudentsArray);
-
-    Plotly.newPlot(
-        "studentChart",
-        [
-            {
-                x: studentYears,
-                y: studentValues,
-                type: "scatter",
-                mode: "lines+markers",
-                name: "學生人數",
-                line: {
-                    color: "#1769aa",
-                    width: 3
-                },
-                marker: {
-                    size: 8
-                }
-            }
-        ],
-        {
-            title: {
-                text: "目前及預測學生人數"
-            },
-            margin: {
-                top: 55,
-                right: 25,
-                bottom: 55,
-                left: 65
-            },
-            xaxis: {
-                title: "年份",
-                dtick: 1
-            },
-            yaxis: {
-                title: "學生人數",
-                separatethousands: true
-            },
-            paper_bgcolor: "white",
-            plot_bgcolor: "white"
-        },
-        {
-            responsive: true,
-            displaylogo: false
-        }
-    );
-
-    // -------------------------------
-    // 新生兒趨勢圖
-    // -------------------------------
-
-    Plotly.newPlot(
-        "birthChart",
-        [
-            {
-                x: historicalBirthYears,
-                y: historicalBirths,
-                type: "scatter",
-                mode: "lines+markers",
-                name: "新生兒",
-                line: {
-                    color: "#d97706",
-                    width: 3
-                },
-                marker: {
-                    size: 8
-                }
-            }
-        ],
-        {
-            title: {
-                text: "2016—2025年新生兒趨勢"
-            },
-            margin: {
-                top: 55,
-                right: 25,
-                bottom: 55,
-                left: 65
-            },
-            xaxis: {
-                title: "年份",
-                dtick: 1
-            },
-            yaxis: {
-                title: "新生兒人數",
-                separatethousands: true
-            },
-            paper_bgcolor: "white",
-            plot_bgcolor: "white"
-        },
-        {
-            responsive: true,
-            displaylogo: false
-        }
-    );
-}
-
-
-// =====================================================
-// 六、更新減班優化判斷
+// 六、圖表
 // =====================================================
 
-function updateAssessment(result) {
-
-    /*
-        示範判斷規則：
-
-        1. 學生人數預測下降8%或以上；
-        2. 預測班級減少至少1班；
-        3. 兩項條件同時符合，才建議進入減班優化評估。
-
-        這些是概念展示條件，
-        不是現行官方政策門檻。
-    */
-
-    const studentDecline =
-        result.studentChange <= -8;
-
-    const classReduction =
-        result.classChange <= -1;
-
-    let decision;
-
-    if (studentDecline && classReduction) {
-
-        decision =
-            "建議進入減班優化評估，並同步檢查跨校合作、校舍使用及教師配置。";
-
-    } else if (studentDecline) {
-
-        decision =
-            "學生人數預測下降，但目前未同時出現明顯班級減少，建議先持續監測。";
-
-    } else if (classReduction) {
-
-        decision =
-            "預測班級需求下降，建議檢查招生率、校舍使用率及教師配置。";
-
-    } else {
-
-        decision =
-            "目前未達到示範性的減班優化條件，建議保留及一般優化。";
-    }
-
-    setText(
-        "policyResult",
-        decision
-    );
-
-    const declineJudgement =
-        studentDecline
-            ? "達到示範性觀察條件"
-            : "未達示範性觀察條件";
-
-    const classJudgement =
-        classReduction
-            ? "預計減少班級"
-            : "未見班級減少";
-
-    const table = document.getElementById(
-        "assessmentTable"
-    );
-
-    if (!table) {
-        return;
-    }
-
-    table.innerHTML = `
-        <tr>
-            <td>預測學生變化</td>
-            <td>${result.studentChange.toFixed(1)}%</td>
-            <td>${declineJudgement}</td>
-        </tr>
-
-        <tr>
-            <td>目前估算班數</td>
-            <td>${formatNumber(result.currentClasses)}班</td>
-            <td>按照目標每班人數估算</td>
-        </tr>
-
-        <tr>
-            <td>預測班級數</td>
-            <td>${formatNumber(result.futureClasses)}班</td>
-            <td>${classJudgement}</td>
-        </tr>
-
-        <tr>
-            <td>班級變化</td>
-            <td>${result.classChange}班</td>
-            <td>${classReduction ? "需要進一步評估" : "暫不觸發減班判斷"}</td>
-        </tr>
-
-        <tr>
-            <td>目標每班人數</td>
-            <td>${result.classSize}人</td>
-            <td>使用者輸入參數</td>
-        </tr>
-
-        <tr>
-            <td>資料性質</td>
-            <td>模型推算</td>
-            <td>概念展示，非正式政策門檻</td>
-        </tr>
-    `;
-}
-
-
-// =====================================================
-// 七、執行整個Dashboard
-// =====================================================
-
-function runDashboard() {
-
-    const result =
-        calculateForecast();
-
-    updateKPI(result);
-
-    updateCharts(result);
-
-    updateAssessment(result);
-}
-
-
-// =====================================================
-// 八、等待網頁載入後執行
-// =====================================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        const calculateButton =
-            document.getElementById("calculateButton");
-
-        if (calculateButton) {
-            calculateButton.addEventListener(
-                "click",
-                runDashboard
-            );
-        }
-
-        runDashboard();
-    }
-);
+const LAYOUT_BASE = {
+    margin: { t: 30, r: 25, b: 55,
